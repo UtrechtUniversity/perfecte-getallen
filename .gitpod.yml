@@ -4,7 +4,8 @@ tasks:
     command: |
       curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain leanprover/lean4:4.13.0-rc3 -y
       echo 'export PATH="$HOME/.elan/bin:$PATH"' >> $HOME/.bashrc
-      echo '### You can now close this terminal and use use File/Open folder to open the sample you want to play with.'
+      lake exe get cache
+      echo '### Je kan nu PerfecteGetallen.lean openen'
 
 vscode:
   extensions:
