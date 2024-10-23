@@ -10,17 +10,24 @@ theorem sum_divisors_prime (p : ℕ) (h : Nat.Prime p) : ∑ i ∈ p.divisors, i
 theorem sum_divisors_2_pow (p : ℕ) : ∑ i ∈ (2^(p - 1)).divisors, i = 2^p - 1 := by
   sorry
 
+theorem sum_divisors_2_pow' (p : ℕ) : ∑ i ∈ (2^p).divisors, i = 2^(p+1) - 1 := by
+  sorry
 
 theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (∃ p : ℕ, Nat.Prime (2^p - 1) ∧ 2^(p - 1)*((2^p) - 1) = n) := by
   constructor
   · intro hp
     rw [Nat.perfect_iff_sum_divisors_eq_two_mul h] at hp
     -- Aanpak?
-    have : ∃ k, n = 2^(multiplicity 2 n)*k := by
+    obtain hn : n = 2^(n.factorization 2)*(n / 2^(n.factorization 2)) := by
+      exact Eq.symm (Nat.ord_proj_mul_ord_compl_eq_self n 2)
 
-      sorry
-    obtain ⟨k, hk⟩ := this
-    rw [hk] at hp
+    have := Nat.coprime_ord_compl (Nat.prime_two) (Nat.not_eq_zero_of_lt h)
+    rw [hn] at hp
+    rw [sum_of_divisors_mul _ _ (by sorry)] at hp
+
+    rw [sum_divisors_2_pow'] at hp
+    
+
 
     sorry
   · rintro ⟨p, hp⟩
