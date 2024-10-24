@@ -13,6 +13,19 @@ theorem sum_divisors_2_pow (p : ℕ) : ∑ i ∈ (2^(p - 1)).divisors, i = 2^p -
 theorem sum_divisors_2_pow' (p : ℕ) : ∑ i ∈ (2^p).divisors, i = 2^(p+1) - 1 := by
   sorry
 
+theorem properDivisors_eq_singleton_iff_prime (n k : ℕ) (hk : n.properDivisors = {k}) : n.Prime ∧ k = 1 := by
+
+  rw [← @Nat.properDivisors_eq_singleton_one_iff_prime]
+  have : n.properDivisors.Nonempty := by
+    rw [hk]
+    exact Finset.singleton_nonempty k
+  rw [@Nat.nonempty_properDivisors] at this
+  rw [← Nat.one_mem_properDivisors_iff_one_lt] at this
+  rw [hk] at this
+  simp only [Finset.mem_singleton] at this
+  rw [this]
+  exact ⟨hk, rfl⟩
+
 theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (∃ p : ℕ, Nat.Prime (2^p - 1) ∧ 2^(p - 1)*((2^p) - 1) = n) := by
   constructor
   · intro hp
@@ -32,7 +45,7 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
     have ho : Odd (2^(n.factorization 2 + 1) - 1) := by
       sorry
 
-    have : (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) ∈ (n / 2^(n.factorization 2)).properDivisors := by
+    have hprop : (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) ∈ (n / 2^(n.factorization 2)).properDivisors := by
       rw [@Nat.mem_properDivisors]
       constructor
       · have hco : Nat.Coprime (2 ^ (n.factorization 2 + 1) - 1) (2^(n.factorization 2 + 1)) := by
@@ -41,13 +54,29 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
 
 
         sorry
-      · 
+      ·
         sorry
 
     have : 2^(n.factorization 2 + 1) ∣ 2^(n.factorization 2  + 1)*(n / 2 ^ n.factorization 2) := by
       exact Nat.dvd_mul_right (2 ^ (n.factorization 2 + 1)) (n / 2 ^ n.factorization 2)
 
-    sorry
+    have hsub : (n / 2^(n.factorization 2)).properDivisors = {(n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1)} := by
+
+      sorry
+    have fact := properDivisors_eq_singleton_iff_prime _ _ hsub
+
+
+    use n.factorization 2 + 1
+
+    have : n / 2^(n.factorization 2) = 2^(n.factorization 2 + 1) - 1 := by
+      sorry
+    rw [← this]
+    constructor
+    · exact fact.1
+    · simp only [add_tsub_cancel_right]
+      exact hn.symm
+
+
   · rintro ⟨p, hp⟩
     rw [Nat.perfect_iff_sum_divisors_eq_two_mul h]
     rw [← hp.2]
@@ -71,3 +100,22 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
       sorry
     rw [this]
     apply mul_comm
+
+
+    -- have hmem : 1 ∈ (n / 2^(n.factorization 2)).properDivisors := by
+    --   refine Nat.one_mem_properDivisors_iff_one_lt.mpr ?_
+    --   exact Nat.one_lt_div_of_mem_properDivisors (by sorry)
+
+    -- have : 1 = (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) := by
+    --   rw [hsub] at hmem
+    --   sorry
+
+
+    -- have : ∑ i ∈  (n / 2^(n.factorization 2)).divisors, i ≥ (n / 2^(n.factorization 2)) + (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) := by
+    --   rw [@Nat.sum_divisors_eq_sum_properDivisors_add_self]
+    --   rw [add_comm]
+    --   refine Nat.add_le_add (by rfl) ?h₂
+    --   exact Finset.single_le_sum (by simp : ∀ i ∈ (n / 2^(n.factorization 2)).properDivisors, 0 ≤ id i) hprop
+
+
+    -- sorry
