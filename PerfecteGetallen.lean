@@ -26,8 +26,26 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
     rw [sum_of_divisors_mul _ _ (by sorry)] at hp
 
     rw [sum_divisors_2_pow'] at hp
-    
+    rw [← mul_assoc] at hp
+    rw [← Nat.pow_succ'] at hp
 
+    have ho : Odd (2^(n.factorization 2 + 1) - 1) := by
+      sorry
+
+    have : (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) ∈ (n / 2^(n.factorization 2)).properDivisors := by
+      rw [@Nat.mem_properDivisors]
+      constructor
+      · have hco : Nat.Coprime (2 ^ (n.factorization 2 + 1) - 1) (2^(n.factorization 2 + 1)) := by
+          have := Odd.coprime_two_right ho
+          exact Nat.Coprime.pow_right (n.factorization 2 + 1) this
+
+
+        sorry
+      · 
+        sorry
+
+    have : 2^(n.factorization 2 + 1) ∣ 2^(n.factorization 2  + 1)*(n / 2 ^ n.factorization 2) := by
+      exact Nat.dvd_mul_right (2 ^ (n.factorization 2 + 1)) (n / 2 ^ n.factorization 2)
 
     sorry
   · rintro ⟨p, hp⟩
