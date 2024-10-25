@@ -8,7 +8,7 @@ theorem sum_divisors_prime (p : ℕ) (h : Nat.Prime p) : ∑ i ∈ p.divisors, i
 
 
 theorem sum_divisors_2_pow' (p : ℕ) : ∑ i ∈ (2^p).divisors, i = 2^(p+1) - 1 := by
-  simp only [Nat.divisors_prime_pow (Nat.prime_two), Finset.sum_map, Function.Embedding.coeFn_mk,Nat.geomSum_eq (by rfl),
+  simp only [Nat.divisors_prime_pow (Nat.prime_two), Finset.sum_map, Function.Embedding.coeFn_mk, Nat.geomSum_eq (by rfl),
     Nat.add_one_sub_one, Nat.div_one]
 
 theorem properDivisors_eq_singleton_iff_prime (n k : ℕ) (hk : n.properDivisors = {k}) : n.Prime ∧ k = 1 := by
@@ -65,6 +65,10 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
       have := Odd.coprime_two_right ho
       exact Nat.Coprime.pow_right (n.factorization 2 + 1) this
 
+    have h0n2 : 0 < n.factorization 2 := by
+      rw [← even_factorization_2 _ (Nat.not_eq_zero_of_lt h)]
+      exact heven
+
     have hprop : (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) ∈ (n / 2^(n.factorization 2)).properDivisors := by
       rw [@Nat.mem_properDivisors]
       constructor
@@ -77,22 +81,32 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
             exact Nat.not_eq_zero_of_lt h
             )
           exact Nat.ord_proj_pos n 2)
-        have : 0 < n.factorization 2 := by
-          rw [← even_factorization_2 _ (Nat.not_eq_zero_of_lt h)]
-          exact heven
+
         apply Nat.lt_sub_of_add_lt
         simp only [Nat.reduceAdd]
-        exact lt_self_pow (Nat.one_lt_two) (Nat.lt_add_of_pos_left this)
+        exact lt_self_pow (Nat.one_lt_two) (Nat.lt_add_of_pos_left h0n2)
 
 
     have : 2^(n.factorization 2 + 1) ∣ 2^(n.factorization 2  + 1)*(n / 2 ^ n.factorization 2) := by
       exact Nat.dvd_mul_right (2 ^ (n.factorization 2 + 1)) (n / 2 ^ n.factorization 2)
+
+    have factoid : 2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2) / (2 ^ (n.factorization 2 + 1) - 1) =
+        (n / 2 ^ n.factorization 2) + (n / 2 ^ n.factorization 2)/(2 ^ (n.factorization 2 + 1) - 1) := by
+      have : 2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2) =
+          (2 ^ (n.factorization 2).succ - 1) * (n / 2 ^ n.factorization 2) + (n / 2 ^ n.factorization 2) := by
+        rw [Nat.mul_sub_right_distrib]
+        rw [one_mul]
+        rw [Nat.sub_add_cancel (Nat.le_mul_of_pos_left _ (n.factorization 2).succ.two_pow_pos)]
+      rw [this]
+      
+      sorry
 
     have hsub : (n / 2^(n.factorization 2)).properDivisors = {(n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1)} := by
       ext v
       simp only [Finset.mem_singleton]
       constructor
       · intro h
+        rw [@Nat.sum_divisors_eq_sum_properDivisors_add_self] at hp'
 
         sorry
       · intro h
