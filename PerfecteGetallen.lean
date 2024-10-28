@@ -98,8 +98,9 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
         rw [one_mul]
         rw [Nat.sub_add_cancel (Nat.le_mul_of_pos_left _ (n.factorization 2).succ.two_pow_pos)]
       rw [this]
-      
-      sorry
+      rw [Nat.mul_add_div (by omega)]
+
+
 
     have hsub : (n / 2^(n.factorization 2)).properDivisors = {(n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1)} := by
       ext v
@@ -107,7 +108,10 @@ theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (
       constructor
       · intro h
         rw [@Nat.sum_divisors_eq_sum_properDivisors_add_self] at hp'
-
+        rw [factoid] at hp'
+        rw [add_comm] at hp'
+        simp only [add_right_inj] at hp'
+        
         sorry
       · intro h
         rw [h]
