@@ -1,178 +1,179 @@
-import Mathlib
+/-
 
-def sum_of_divisors (n : ℕ) : ℕ := ∑ i ∈ n.divisors, i
+Op basis van werk van Aaron Anderson (zie https://github.com/leanprover-community/mathlib4/blob/master/Archive/Wiedijk100Theorems/PerfectNumbers.lean)
+-/
+import Mathlib.NumberTheory.ArithmeticFunction
+import Mathlib.NumberTheory.LucasLehmer
+import Mathlib.Algebra.GeomSum
+import Mathlib.RingTheory.Multiplicity
+import Mathlib.Tactic.NormNum.Prime
 
-theorem sum_of_divisors_mul (p q : ℕ) (h : Nat.Coprime p q) : ∑ i ∈ (p*q).divisors, i = (∑ i ∈ p.divisors, i)*(∑ i ∈ q.divisors, i) := Nat.Coprime.sum_divisors_mul h
+namespace Nat
 
-theorem sum_divisors_prime (p : ℕ) (h : Nat.Prime p) : ∑ i ∈ p.divisors, i = p + 1 := Nat.Prime.sum_divisors h
+open ArithmeticFunction Finset
+
+-- Een getal van de vorm 2^k - 1 noemen we een mersenne getal. Als dat getal priem is, noemen we het een mersenne priemgetal.
+
+-- Het zesde mersenne getal (0 telt ook mee) is 31. Dit kan je in de infoview zien als je cursor hierin staat.
+#eval mersenne 5
 
 
-theorem sum_divisors_2_pow' (p : ℕ) : ∑ i ∈ (2^p).divisors, i = 2^(p+1) - 1 := by
-  simp only [Nat.divisors_prime_pow (Nat.prime_two), Finset.sum_map, Function.Embedding.coeFn_mk, Nat.geomSum_eq (by rfl),
-    Nat.add_one_sub_one, Nat.div_one]
+-- Opdracht: Bereken met `#eval` het tiende mersenne getal.
 
-theorem properDivisors_eq_singleton_iff_prime (n k : ℕ) (hk : n.properDivisors = {k}) : n.Prime ∧ k = 1 := by
+-- Een natuurlijk getal `a` deelt een natuurlijk getal `b` als er een natuurlijk getal `k` bestaat zodat `a*k=b`. Dit schrijven we als: `a ∣ b`
+-- Hierbij typen we in Lean de streep als `\|`. We zeggen ook wel dat `a` een deler is van `b`.
 
-  rw [← @Nat.properDivisors_eq_singleton_one_iff_prime]
-  have : n.properDivisors.Nonempty := by
-    rw [hk]
-    exact Finset.singleton_nonempty k
-  rw [@Nat.nonempty_properDivisors] at this
-  rw [← Nat.one_mem_properDivisors_iff_one_lt] at this
-  rw [hk] at this
-  simp only [Finset.mem_singleton] at this
-  rw [this]
-  exact ⟨hk, rfl⟩
+-- 5 deelt 10
+#eval 5 ∣ 10
 
-theorem even_factorization_2 (n : ℕ) (hn0 : n ≠ 0) : Even n ↔ 0 < n.factorization 2 := by
-  rw [@Nat.even_iff]
-  constructor <;> intro h
-  · exact Nat.Prime.factorization_pos_of_dvd (Nat.prime_two) hn0 (Nat.dvd_of_mod_eq_zero h)
-  · rw [← @Nat.dvd_iff_mod_eq_zero]
-    apply Nat.dvd_of_factorization_pos
-    exact Nat.not_eq_zero_of_lt h
+-- 6 deelt 31 niet
+#eval 6 ∣ 31
 
-theorem euclid_euler (n : ℕ) (heven : Even n) (h : n > 0): Nat.Perfect n ↔ (∃ p : ℕ, Nat.Prime (2^p - 1) ∧ 2^(p - 1)*((2^p) - 1) = n) := by
+-- Opdracht: Bereken met `#eval` of `13` een deler is van `91`
+
+-- De delers van een getal n kan je berekenen met `divisors`
+#eval (6 : Nat).divisors
+
+-- Opdracht: Bereken met `#eval` de delers van 28
+
+-- Opdracht: Bereken met `#eval` de delers van 2^8
+
+def som_van_delers (n : ℕ) := ∑ d ∈ n.divisors, d
+
+-- De som van de delers van 4 is 6
+#eval som_van_delers 4
+
+-- De som van de delers van 6 is 12
+#eval som_van_delers 6
+
+-- Bereken met `#eval` de som van de delers van `2^k` voor een paar verschillende getallen `k`
+
+-- Deze rekenregel stelt dat de som van de eerste `k` tweemachten gelijk is aan `2^k - 1`
+theorem feit1 (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 := by
+  rw [show 2 = 1 + 1 from rfl, ← geom_sum_mul_add 1 k]
+  norm_num
+
+-- Opdracht: Gebruik de tactiek `norm_num` en `feit1` om dit bewijs af te maken.
+-- We bewijzen hier dat
+theorem sigma_twee_macht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
+  -- Met simp only herschrijven we de definities naar wat er onder ligt
+  simp only [som_van_delers, mersenne]
+  sorry
+  -- Oplossing:
+  -- norm_num
+  -- exact feit1 (k + 1)
+
+-- De definitie van een perfect getal is dat de som van alle delers, behalve het getal zelf, gelijk is aan het getal zelf.
+-- In de wiskunde bibliotheek van Lean (Mathlib), worden deze delers `properDivisors` genoemd.
+#reduce Perfect
+
+
+-- Bij onze `som_van_delers` nemen we het getal zelf ook mee.
+-- Dat betekent dat een getal perfect is, dan en slechts dan als de `som_van_delers` gelijk is aan twee keer het getal.
+theorem perfect_desda_som_van_delers_gelijk_twee_keer (h : 0 < n) :
+    Perfect n ↔ som_van_delers n = 2 * n := by
+  simp [som_van_delers]
+  exact perfect_iff_sum_divisors_eq_two_mul h
+
+
+-- Twee natuurlijke getallen `p` en `q` zijn `Copriem` (Engels: `Coprime`) als er geen getal `k > 1` bestaat zodat `k ∣ p` en `k ∣ q`.
+
+-- 15 en 28 zijn copriem
+#eval Nat.Coprime 15 28
+
+-- 32 en 54 zijn niet copriem (2 deelt beide)
+#eval Nat.Coprime 32 54
+
+-- Opdracht: Bereken met `#eval` of 4 en 7 copriem zijn.
+
+#eval Nat.Coprime 4 7
+
+-- Opdracht: Bereken de som van delers van 4, 7 en 28 met `#eval`
+
+
+-- Als twee getallen Copriem zijn, dan kunnen we de som van de delers van het product uitrekenen door de sommen van delers van p en q los te vermenigvuldigen
+theorem sum_van_delers_multiplicatief {p q : ℕ} (h : Nat.Coprime p q): som_van_delers (p * q) = som_van_delers p * som_van_delers q := by
+  simp [som_van_delers]
+  rw [Coprime.sum_divisors_mul h]
+
+/-- Euclid's theorem that Mersenne primes induce perfect numbers -/
+theorem perfect_two_pow_mul_mersenne_of_prime (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
+    Nat.Perfect (2 ^ k * mersenne (k + 1)) := by
+  rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
+    mul_comm,
+    sum_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
+    sigma_twee_macht_gelijk_mersenne_opv]
+  simp [pr, Nat.prime_two, sigma_one_apply]
+
+
+theorem ne_zero_of_prime_mersenne (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by
+  intro H
+  simp [H, mersenne, Nat.not_prime_one] at pr
+
+theorem even_two_pow_mul_mersenne_of_prime (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
+    Even (2 ^ k * mersenne (k + 1)) := by simp [ne_zero_of_prime_mersenne k pr, parity_simps]
+
+theorem eq_two_pow_mul_odd {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
+  have h := Nat.multiplicity_finite_iff.2 ⟨Nat.prime_two.ne_one, hpos⟩
+  cases' pow_multiplicity_dvd 2 n with m hm
+  use multiplicity 2 n, m
+  refine ⟨hm, ?_⟩
+  rw [even_iff_two_dvd]
+  have hg := h.not_pow_dvd_of_multiplicity_lt (Nat.lt_succ_self _)
+  contrapose! hg
+  rcases hg with ⟨k, rfl⟩
+  apply Dvd.intro k
+  rw [pow_succ, mul_assoc, ← hm]
+
+/-- **Perfect Number Theorem**: Euler's theorem that even perfect numbers can be factored as a
+  power of two times a Mersenne prime. -/
+theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (perf : Nat.Perfect n) :
+    ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧ n = 2 ^ k * mersenne (k + 1) := by
+  have hpos := perf.2
+  rcases eq_two_pow_mul_odd hpos with ⟨k, m, rfl, hm⟩
+  use k
+  rw [even_iff_two_dvd] at hm
+  rw [Nat.perfect_iff_sum_divisors_eq_two_mul hpos, ← sigma_one_apply,
+    isMultiplicative_sigma.map_mul_of_coprime (Nat.prime_two.coprime_pow_of_not_dvd hm).symm,
+    sigma_twee_macht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
+  obtain ⟨j, rfl⟩ := ((Odd.coprime_two_right (by simp)).pow_right _).dvd_of_dvd_mul_left
+    (Dvd.intro _ perf)
+  rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
+  have h := mul_left_cancel₀ (by positivity) perf
+  rw [sigma_one_apply, Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
+    one_mul, add_comm] at h
+  have hj := add_left_cancel h
+  cases Nat.sum_properDivisors_dvd (by rw [hj]; apply Dvd.intro_left (mersenne (k + 1)) rfl) with
+  | inl h_1 =>
+    have j1 : j = 1 := Eq.trans hj.symm h_1
+    rw [j1, mul_one, Nat.sum_properDivisors_eq_one_iff_prime] at h_1
+    simp [h_1, j1]
+  | inr h_1 =>
+    have jcon := Eq.trans hj.symm h_1
+    rw [← one_mul j, ← mul_assoc, mul_one] at jcon
+    have jcon2 := mul_right_cancel₀ ?_ jcon
+    · exfalso
+      match k with
+      | 0 =>
+        apply hm
+        rw [← jcon2, pow_zero, one_mul, one_mul] at ev
+        rw [← jcon2, one_mul]
+        exact even_iff_two_dvd.mp ev
+      | .succ k =>
+        apply ne_of_lt _ jcon2
+        rw [mersenne, ← Nat.pred_eq_sub_one, Nat.lt_pred_iff, ← pow_one (Nat.succ 1)]
+        apply pow_lt_pow_right (Nat.lt_succ_self 1) (Nat.succ_lt_succ (Nat.succ_pos k))
+    contrapose! hm
+    simp [hm]
+
+/-- The Euclid-Euler theorem characterizing even perfect numbers -/
+theorem even_and_perfect_iff {n : ℕ} :
+    Even n ∧ Nat.Perfect n ↔ ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧
+      n = 2 ^ k * mersenne (k + 1) := by
   constructor
-  · intro hp
-    rw [Nat.perfect_iff_sum_divisors_eq_two_mul h] at hp
+  · rintro ⟨ev, perf⟩
+    exact Nat.eq_two_pow_mul_prime_mersenne_of_even_perfect ev perf
+  · rintro ⟨k, pr, rfl⟩
+    exact ⟨even_two_pow_mul_mersenne_of_prime k pr, perfect_two_pow_mul_mersenne_of_prime k pr⟩
 
-    obtain hn : n = 2^(n.factorization 2)*(n / 2^(n.factorization 2)) := by
-      exact Eq.symm (Nat.ord_proj_mul_ord_compl_eq_self n 2)
-
-    have := Nat.coprime_ord_compl (Nat.prime_two) (Nat.not_eq_zero_of_lt h)
-    rw [hn] at hp
-    rw [sum_of_divisors_mul _ _ (Nat.Coprime.pow_left _ this)] at hp
-
-    rw [sum_divisors_2_pow'] at hp
-    rw [← mul_assoc] at hp
-    rw [← Nat.pow_succ'] at hp
-
-    have hn0 : n.factorization 2 + 1 ≠ 0 := by
-      omega
-    have ho := mersenne_odd.mpr hn0
-
-    have hdiv : (2 ^ (n.factorization 2 + 1) - 1) ∣ (2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2)) := by
-      exact Dvd.intro (∑ i ∈ (n / 2 ^ n.factorization 2).divisors, i) hp
-
-
-    have hp' :  ∑ i ∈ (n / 2 ^ n.factorization 2).divisors, i =
-        (2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2))/(2 ^ (n.factorization 2 + 1) - 1) := by
-      rw [mul_comm] at hp
-      exact Nat.eq_div_of_mul_eq_left (Nat.ne_of_odd_add ho) hp
-
-    have hco : Nat.Coprime (2 ^ (n.factorization 2 + 1) - 1) (2^(n.factorization 2 + 1)) := by
-      have := Odd.coprime_two_right ho
-      exact Nat.Coprime.pow_right (n.factorization 2 + 1) this
-
-    have h0n2 : 0 < n.factorization 2 := by
-      rw [← even_factorization_2 _ (Nat.not_eq_zero_of_lt h)]
-      exact heven
-
-    have hprop : (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) ∈ (n / 2^(n.factorization 2)).properDivisors := by
-      rw [@Nat.mem_properDivisors]
-      constructor
-      · apply Nat.div_dvd_of_dvd
-        apply Nat.Coprime.dvd_of_dvd_mul_left _ hdiv
-        exact hco
-      · apply Nat.div_lt_self (by
-          apply Nat.div_pos (by
-            apply Nat.ord_proj_le
-            exact Nat.not_eq_zero_of_lt h
-            )
-          exact Nat.ord_proj_pos n 2)
-
-        apply Nat.lt_sub_of_add_lt
-        simp only [Nat.reduceAdd]
-        exact lt_self_pow (Nat.one_lt_two) (Nat.lt_add_of_pos_left h0n2)
-
-
-    have : 2^(n.factorization 2 + 1) ∣ 2^(n.factorization 2  + 1)*(n / 2 ^ n.factorization 2) := by
-      exact Nat.dvd_mul_right (2 ^ (n.factorization 2 + 1)) (n / 2 ^ n.factorization 2)
-
-    have factoid : 2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2) / (2 ^ (n.factorization 2 + 1) - 1) =
-        (n / 2 ^ n.factorization 2) + (n / 2 ^ n.factorization 2)/(2 ^ (n.factorization 2 + 1) - 1) := by
-      have : 2 ^ (n.factorization 2).succ * (n / 2 ^ n.factorization 2) =
-          (2 ^ (n.factorization 2).succ - 1) * (n / 2 ^ n.factorization 2) + (n / 2 ^ n.factorization 2) := by
-        rw [Nat.mul_sub_right_distrib]
-        rw [one_mul]
-        rw [Nat.sub_add_cancel (Nat.le_mul_of_pos_left _ (n.factorization 2).succ.two_pow_pos)]
-      rw [this]
-      rw [Nat.mul_add_div (by omega)]
-
-
-
-    have hsub : (n / 2^(n.factorization 2)).properDivisors = {(n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1)} := by
-      ext v
-      simp only [Finset.mem_singleton]
-      constructor
-      · intro h
-        rw [@Nat.sum_divisors_eq_sum_properDivisors_add_self] at hp'
-        rw [factoid] at hp'
-        rw [add_comm] at hp'
-        simp only [add_right_inj] at hp'
-        
-        sorry
-      · intro h
-        rw [h]
-        exact hprop
-
-    have fact := properDivisors_eq_singleton_iff_prime _ _ hsub
-
-
-    use n.factorization 2 + 1
-
-    have : n / 2^(n.factorization 2) = 2^(n.factorization 2 + 1) - 1 := by
-      sorry
-    rw [← this]
-    constructor
-    · exact fact.1
-    · simp only [add_tsub_cancel_right]
-      exact hn.symm
-
-
-  · rintro ⟨p, hp⟩
-    rw [Nat.perfect_iff_sum_divisors_eq_two_mul h]
-    rw [← hp.2]
-    have hp0 : 0 < p - 1 := by
-      sorry
-    have hcoprime : Nat.Coprime (2 ^ (p - 1)) (2^p - 1) := by
-      refine (Nat.coprime_pow_left_iff hp0 2 (2 ^ p - 1)).mpr ?_
-      rw [@Nat.coprime_two_left, @Nat.odd_iff]
-      simp only [Nat.two_pow_sub_one_mod_two, Nat.one_mod_two_pow_eq_one]
-      omega
-
-    rw [Nat.Coprime.sum_divisors_mul hcoprime]
-    rw [sum_divisors_2_pow']
-    rw [Nat.Prime.sum_divisors hp.1]
-    have : 2^p - 1 + 1 = 2^p := by
-      exact succ_mersenne p
-    rw [this]
-    have : p - 1 + 1 = p := by
-      sorry
-    rw [this]
-    rw [← mul_assoc]
-    have : 2 * 2^(p - 1) = 2^p := by
-      sorry
-    rw [this]
-    exact mul_comm _ _
-
-
-
-    -- have hmem : 1 ∈ (n / 2^(n.factorization 2)).properDivisors := by
-    --   refine Nat.one_mem_properDivisors_iff_one_lt.mpr ?_
-    --   exact Nat.one_lt_div_of_mem_properDivisors (by sorry)
-
-    -- have : 1 = (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) := by
-    --   rw [hsub] at hmem
-    --   sorry
-
-
-    -- have : ∑ i ∈  (n / 2^(n.factorization 2)).divisors, i ≥ (n / 2^(n.factorization 2)) + (n / 2^(n.factorization 2))/(2^(n.factorization 2 + 1) - 1) := by
-    --   rw [@Nat.sum_divisors_eq_sum_properDivisors_add_self]
-    --   rw [add_comm]
-    --   refine Nat.add_le_add (by rfl) ?h₂
-    --   exact Finset.single_le_sum (by simp : ∀ i ∈ (n / 2^(n.factorization 2)).properDivisors, 0 ≤ id i) hprop
-
-
-    -- sorry
+end Nat
