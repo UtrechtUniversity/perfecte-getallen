@@ -55,7 +55,7 @@ theorem feit1 (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 := by
 
 -- Opdracht: Gebruik de tactiek `norm_num` en `feit1` om dit bewijs af te maken.
 -- We bewijzen hier dat
-theorem sigma_twee_macht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
+theorem som_van_delers_twee_macht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
   -- Met simp only herschrijven we de definities naar wat er onder ligt
   simp only [som_van_delers, mersenne]
   sorry
@@ -86,34 +86,46 @@ theorem perfect_desda_som_van_delers_gelijk_twee_keer (h : 0 < n) :
 
 -- Opdracht: Bereken met `#eval` of 4 en 7 copriem zijn.
 
-#eval Nat.Coprime 4 7
-
 -- Opdracht: Bereken de som van delers van 4, 7 en 28 met `#eval`
 
 
--- Als twee getallen Copriem zijn, dan kunnen we de som van de delers van het product uitrekenen door de sommen van delers van p en q los te vermenigvuldigen
-theorem sum_van_delers_multiplicatief {p q : ℕ} (h : Nat.Coprime p q): som_van_delers (p * q) = som_van_delers p * som_van_delers q := by
+-- Als twee getallen copriem zijn, dan kunnen we de som van de delers van het product uitrekenen door de sommen van delers van p en q los te vermenigvuldigen
+theorem som_van_delers_multiplicatief {p q : ℕ} (h : Nat.Coprime p q): som_van_delers (p * q) = som_van_delers p * som_van_delers q := by
   simp [som_van_delers]
   rw [Coprime.sum_divisors_mul h]
 
-/-- Euclid's theorem that Mersenne primes induce perfect numbers -/
-theorem perfect_two_pow_mul_mersenne_of_prime (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
+-- Als een getal `p` priem is, dan is de som van de delers `p + 1`.
+-- De enige delers zijn tenslotte `1` en `p`\
+theorem som_van_delers_priem {p : ℕ} (h : p.Prime) : som_van_delers p = p + 1 := by
+  simp [som_van_delers, h]
+
+/-- Euclides had al bewezen dat een mersenne-priemgetal gebruikt kan worden om
+    een perfect getal te maken -/
+-- Opdracht: Bewijs deze stelling met gebruik van verschillende stellingen hierboven,
+-- de lemma's `mul_assoc`, `pow_succ'`, `mul_comm`, en de tactieken `rw`, `simp` en `positivity` (die goed werkt om te bewijzen dat iets groter dan 0 is)
+theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
     Nat.Perfect (2 ^ k * mersenne (k + 1)) := by
-  rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
-    mul_comm,
-    sum_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
-    sigma_twee_macht_gelijk_mersenne_opv]
-  simp [pr, Nat.prime_two, sigma_one_apply]
+  sorry
+  -- Oplossing:
+  -- rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
+  --   mul_comm,
+  --   som_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
+  --   som_van_delers_twee_macht_gelijk_mersenne_opv]
+  -- simp [pr, som_van_delers_priem]
 
 
-theorem ne_zero_of_prime_mersenne (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by
+-- Feitje: als we een mersenne priemgetal hebben met exponent `k + 1`, dan kan `k` niet gelijk zijn aan `0`.
+theorem feitje2 (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by
   intro H
   simp [H, mersenne, Nat.not_prime_one] at pr
 
-theorem even_two_pow_mul_mersenne_of_prime (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
-    Even (2 ^ k * mersenne (k + 1)) := by simp [ne_zero_of_prime_mersenne k pr, parity_simps]
+-- Dan weten we ook dat het perfecte getal dat we maken met het mersenne priemgetal even moet zijn
+theorem feitje3 (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
+    Even (2 ^ k * mersenne (k + 1)) := by simp [feitje2 k pr, parity_simps]
 
-theorem eq_two_pow_mul_odd {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
+-- We kunnen elk getal schrijven als product van tweemacht en een oneven getal.
+-- Dit doen we door herhaaldelijk factoren twee eruit te delen tot het overgebleven getal oneven is.
+theorem feitje4 {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
   have h := Nat.multiplicity_finite_iff.2 ⟨Nat.prime_two.ne_one, hpos⟩
   cases' pow_multiplicity_dvd 2 n with m hm
   use multiplicity 2 n, m
@@ -130,17 +142,17 @@ theorem eq_two_pow_mul_odd {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k *
 theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (perf : Nat.Perfect n) :
     ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧ n = 2 ^ k * mersenne (k + 1) := by
   have hpos := perf.2
-  rcases eq_two_pow_mul_odd hpos with ⟨k, m, rfl, hm⟩
+  rcases feitje4 hpos with ⟨k, m, rfl, hm⟩
   use k
   rw [even_iff_two_dvd] at hm
-  rw [Nat.perfect_iff_sum_divisors_eq_two_mul hpos, ← sigma_one_apply,
-    isMultiplicative_sigma.map_mul_of_coprime (Nat.prime_two.coprime_pow_of_not_dvd hm).symm,
-    sigma_twee_macht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
+  rw [perfect_desda_som_van_delers_gelijk_twee_keer hpos,
+    som_van_delers_multiplicatief (Nat.prime_two.coprime_pow_of_not_dvd hm).symm,
+    som_van_delers_twee_macht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
   obtain ⟨j, rfl⟩ := ((Odd.coprime_two_right (by simp)).pow_right _).dvd_of_dvd_mul_left
     (Dvd.intro _ perf)
   rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
   have h := mul_left_cancel₀ (by positivity) perf
-  rw [sigma_one_apply, Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
+  rw [Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
     one_mul, add_comm] at h
   have hj := add_left_cancel h
   cases Nat.sum_properDivisors_dvd (by rw [hj]; apply Dvd.intro_left (mersenne (k + 1)) rfl) with
@@ -174,6 +186,6 @@ theorem even_and_perfect_iff {n : ℕ} :
   · rintro ⟨ev, perf⟩
     exact Nat.eq_two_pow_mul_prime_mersenne_of_even_perfect ev perf
   · rintro ⟨k, pr, rfl⟩
-    exact ⟨even_two_pow_mul_mersenne_of_prime k pr, perfect_two_pow_mul_mersenne_of_prime k pr⟩
+    exact ⟨feitje3 k pr, perfect_twee_macht_prod_mersenne_van_priem k pr⟩
 
 end Nat
