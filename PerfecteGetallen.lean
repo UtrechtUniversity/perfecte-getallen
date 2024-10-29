@@ -38,6 +38,7 @@ theorem vijf_deelt_tien : 5 ∣ 10 := by
 -- Opdracht: Bewijs dat 7 een deler is van 56
 theorem zeven_deelt_zesenvijftig : 7 ∣ 56 := by
   sorry
+  -- Oplossing : use 8
 
 -- De delers van een getal n kan je berekenen met `divisors`
 #eval (6 : Nat).divisors
@@ -197,6 +198,7 @@ theorem even_en_perfect_desda {n : ℕ} :
   · rintro ⟨k, pr, rfl⟩
     exact ⟨perfect_getal_van_mersenne_priem_is_even k pr, perfect_twee_macht_prod_mersenne_van_priem k pr⟩
 
+-- TODO: Clean up
 theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Prime) : (k + 1).Prime := by
   by_contra! hc
   rw [@prime_def_lt] at hc
@@ -211,17 +213,36 @@ theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Pr
   unfold mersenne at h
   rw [Nat.pow_mul] at h
   have := nat_sub_dvd_pow_sub_pow (2 ^ m) 1 l
-  simp at this
-  
-
-  sorry
+  simp only [one_pow] at this
+  cases' (Nat.dvd_prime h).mp this with h1 hp
+  · rw [@pred_eq_succ_iff] at h1
+    rw [propext (pow_eq_self_iff le.refl)] at h1
+    exact hmnieteen h1
+  · rw [← Nat.pow_mul] at hp
+    rw [← hl] at hp
+    have := Nat.sub_one_cancel (Nat.two_pow_pos _) (Nat.two_pow_pos _) hp
+    have := Nat.pow_right_injective (by rfl) this
+    omega
 
 theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     (heven : Even n) (hperfect : n.Perfect) : n % 10 = 6 ∨ n % 10 = 8 := by
   obtain ⟨k, ⟨hk, hn⟩⟩ := even_en_perfect_desda.mp ⟨heven, hperfect⟩
   rw [hn]
-  cases' Nat.Prime.eq_two_or_odd
-  sorry
+  have : (k + 1).Prime := mersenne_priem_heeft_priem_exponent hk
+  cases' this.eq_two_or_odd with h2 hodd
+  · left
+    have : k = 1 := by omega
+    rw [h2, mersenne, this]
+    norm_num
+  · rw [Nat.odd_mod_four_iff] at hodd
+    cases' hodd with h3 h4
+    · left
+      rw [mersenne]
+      have : (2 ^ (k + 1) - 1) % 10 = 1 := by
+        
+        sorry
+      sorry
+    · sorry
 
 
 end Nat
