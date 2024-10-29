@@ -31,6 +31,14 @@ open ArithmeticFunction Finset
 
 -- Opdracht: Bereken met `#eval` of `13` een deler is van `91`
 
+-- We kunnen bewijzen dat 5 een deler is van 10: Door het geven van het getal 2 met `use`, want `5*2=10`
+theorem vijf_deelt_tien : 5 ∣ 10 := by
+  use 2
+
+-- Opdracht: Bewijs dat 7 een deler is van 56
+theorem zeven_deelt_zesenvijftig : 7 ∣ 56 := by
+  sorry
+
 -- De delers van een getal n kan je berekenen met `divisors`
 #eval (6 : Nat).divisors
 
@@ -49,11 +57,11 @@ def som_van_delers (n : ℕ) := ∑ d ∈ n.divisors, d
 -- Bereken met `#eval` de som van de delers van `2^k` voor een paar verschillende getallen `k`
 
 -- Deze rekenregel stelt dat de som van de eerste `k` tweemachten gelijk is aan `2^k - 1`
-theorem feit1 (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 := by
+theorem som_van_tweemachten (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 := by
   rw [show 2 = 1 + 1 from rfl, ← geom_sum_mul_add 1 k]
   norm_num
 
--- Opdracht: Gebruik de tactiek `norm_num` en `feit1` om dit bewijs af te maken.
+-- Opdracht: Gebruik de tactiek `norm_num` en `som_van_tweemachten` om dit bewijs af te maken.
 -- We bewijzen hier dat
 theorem som_van_delers_twee_macht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
   -- Met simp only herschrijven we de definities naar wat er onder ligt
@@ -99,10 +107,12 @@ theorem som_van_delers_multiplicatief {p q : ℕ} (h : Nat.Coprime p q): som_van
 theorem som_van_delers_priem {p : ℕ} (h : p.Prime) : som_van_delers p = p + 1 := by
   simp [som_van_delers, h]
 
-/-- Euclides had al bewezen dat een mersenne-priemgetal gebruikt kan worden om
-    een perfect getal te maken -/
+-- Euclides had al bewezen dat een mersenne-priemgetal gebruikt kan worden om
+-- een perfect getal te maken.
 -- Opdracht: Bewijs deze stelling met gebruik van verschillende stellingen hierboven,
--- de lemma's `mul_assoc`, `pow_succ'`, `mul_comm`, en de tactieken `rw`, `simp` en `positivity` (die goed werkt om te bewijzen dat iets groter dan 0 is)
+-- de stellingen `mul_assoc`, `pow_succ'`, `mul_comm`, en de tactieken `rw`, `simp` en `positivity` (die goed werkt om te bewijzen dat iets groter dan 0 is)
+-- Tip: Als je niet weet wat een stelling doet kan je het bekijken met `#check`
+#check mul_assoc
 theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
     Nat.Perfect (2 ^ k * mersenne (k + 1)) := by
   sorry
@@ -115,19 +125,19 @@ theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k 
 
 
 -- Feitje: als we een mersenne priemgetal hebben met exponent `k + 1`, dan kan `k` niet gelijk zijn aan `0`.
-theorem feitje2 (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by
+theorem mersenne_priem_exponent_niet_nul (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by
   intro H
   simp [H, mersenne, Nat.not_prime_one] at pr
 
 -- Dan weten we ook dat het perfecte getal dat we maken met het mersenne priemgetal even moet zijn
-theorem feitje3 (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
-    Even (2 ^ k * mersenne (k + 1)) := by simp [feitje2 k pr, parity_simps]
+theorem perfect_getal_van_mersenne_priem_is_even (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
+    Even (2 ^ k * mersenne (k + 1)) := by simp [mersenne_priem_exponent_niet_nul k pr, parity_simps]
 
 -- We kunnen elk getal schrijven als product van tweemacht en een oneven getal.
 -- Dit doen we door herhaaldelijk factoren twee eruit te delen tot het overgebleven getal oneven is.
-theorem feitje4 {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
+theorem ontbinding_met_tweemacht {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
   have h := Nat.multiplicity_finite_iff.2 ⟨Nat.prime_two.ne_one, hpos⟩
-  cases' pow_multiplicity_dvd 2 n with m hm
+  obtain ⟨m, hm⟩ := pow_multiplicity_dvd 2 n
   use multiplicity 2 n, m
   refine ⟨hm, ?_⟩
   rw [even_iff_two_dvd]
@@ -137,12 +147,11 @@ theorem feitje4 {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Ev
   apply Dvd.intro k
   rw [pow_succ, mul_assoc, ← hm]
 
-/-- **Perfect Number Theorem**: Euler's theorem that even perfect numbers can be factored as a
-  power of two times a Mersenne prime. -/
+-- Euler had bewezen dat elk even perfect getal van de vorm van Euclides moet zijn
 theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (perf : Nat.Perfect n) :
     ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧ n = 2 ^ k * mersenne (k + 1) := by
   have hpos := perf.2
-  rcases feitje4 hpos with ⟨k, m, rfl, hm⟩
+  rcases ontbinding_met_tweemacht hpos with ⟨k, m, rfl, hm⟩
   use k
   rw [even_iff_two_dvd] at hm
   rw [perfect_desda_som_van_delers_gelijk_twee_keer hpos,
@@ -152,7 +161,7 @@ theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (p
     (Dvd.intro _ perf)
   rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
   have h := mul_left_cancel₀ (by positivity) perf
-  rw [Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
+  rw [som_van_delers, Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
     one_mul, add_comm] at h
   have hj := add_left_cancel h
   cases Nat.sum_properDivisors_dvd (by rw [hj]; apply Dvd.intro_left (mersenne (k + 1)) rfl) with
@@ -178,14 +187,41 @@ theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (p
     contrapose! hm
     simp [hm]
 
-/-- The Euclid-Euler theorem characterizing even perfect numbers -/
-theorem even_and_perfect_iff {n : ℕ} :
+-- Dus nu weten we de vorm van alle perfecte even getallen
+theorem even_en_perfect_desda {n : ℕ} :
     Even n ∧ Nat.Perfect n ↔ ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧
       n = 2 ^ k * mersenne (k + 1) := by
   constructor
   · rintro ⟨ev, perf⟩
     exact Nat.eq_two_pow_mul_prime_mersenne_of_even_perfect ev perf
   · rintro ⟨k, pr, rfl⟩
-    exact ⟨feitje3 k pr, perfect_twee_macht_prod_mersenne_van_priem k pr⟩
+    exact ⟨perfect_getal_van_mersenne_priem_is_even k pr, perfect_twee_macht_prod_mersenne_van_priem k pr⟩
+
+theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Prime) : (k + 1).Prime := by
+  by_contra! hc
+  rw [@prime_def_lt] at hc
+  push_neg at hc
+  have : 2 ≤ k + 1:= by
+    have := mersenne_priem_exponent_niet_nul k h
+    omega
+  specialize hc this
+  obtain ⟨m, ⟨hmklein, hmdeelt⟩⟩ := hc
+  obtain ⟨⟨l, hl⟩, hmnieteen⟩ := hmdeelt
+  rw [hl] at h
+  unfold mersenne at h
+  rw [Nat.pow_mul] at h
+  have := nat_sub_dvd_pow_sub_pow (2 ^ m) 1 l
+  simp at this
+  
+
+  sorry
+
+theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
+    (heven : Even n) (hperfect : n.Perfect) : n % 10 = 6 ∨ n % 10 = 8 := by
+  obtain ⟨k, ⟨hk, hn⟩⟩ := even_en_perfect_desda.mp ⟨heven, hperfect⟩
+  rw [hn]
+  cases' Nat.Prime.eq_two_or_odd
+  sorry
+
 
 end Nat
