@@ -64,13 +64,13 @@ theorem som_van_tweemachten (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 
 
 -- Opdracht: Gebruik de tactiek `norm_num` en `som_van_tweemachten` om dit bewijs af te maken.
 -- We bewijzen hier dat
-theorem som_van_delers_twee_macht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
+theorem som_van_delers_tweemacht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
   -- Met simp only herschrijven we de definities naar wat er onder ligt
   simp only [som_van_delers, mersenne]
   sorry
   -- Oplossing:
   -- norm_num
-  -- exact feit1 (k + 1)
+  -- exact som_van_tweemachten (k + 1)
 
 -- De definitie van een perfect getal is dat de som van alle delers, behalve het getal zelf, gelijk is aan het getal zelf.
 -- In de wiskunde bibliotheek van Lean (Mathlib), worden deze delers `properDivisors` genoemd.
@@ -121,7 +121,7 @@ theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k 
   -- rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
   --   mul_comm,
   --   som_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
-  --   som_van_delers_twee_macht_gelijk_mersenne_opv]
+  --   som_van_delers_tweemacht_gelijk_mersenne_opv]
   -- simp [pr, som_van_delers_priem]
 
 
@@ -132,7 +132,8 @@ theorem mersenne_priem_exponent_niet_nul (k : ℕ) (pr : (mersenne (k + 1)).Prim
 
 -- Dan weten we ook dat het perfecte getal dat we maken met het mersenne priemgetal even moet zijn
 theorem perfect_getal_van_mersenne_priem_is_even (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
-    Even (2 ^ k * mersenne (k + 1)) := by simp [mersenne_priem_exponent_niet_nul k pr, parity_simps]
+    Even (2 ^ k * mersenne (k + 1)) := by
+  simp [mersenne_priem_exponent_niet_nul k pr, parity_simps]
 
 -- We kunnen elk getal schrijven als product van tweemacht en een oneven getal.
 -- Dit doen we door herhaaldelijk factoren twee eruit te delen tot het overgebleven getal oneven is.
@@ -157,7 +158,7 @@ theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (p
   rw [even_iff_two_dvd] at hm
   rw [perfect_desda_som_van_delers_gelijk_twee_keer hpos,
     som_van_delers_multiplicatief (Nat.prime_two.coprime_pow_of_not_dvd hm).symm,
-    som_van_delers_twee_macht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
+    som_van_delers_tweemacht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
   obtain ⟨j, rfl⟩ := ((Odd.coprime_two_right (by simp)).pow_right _).dvd_of_dvd_mul_left
     (Dvd.intro _ perf)
   rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
@@ -224,6 +225,18 @@ theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Pr
     have := Nat.pow_right_injective (by rfl) this
     omega
 
+theorem tweemacht_mod_10 (k : ℕ) :
+    (k % 4 = 0 → 2 ^ (k + 1) % 10 = 2) ∧
+    (k % 4 = 1 → 2 ^ (k + 1) % 10 = 4) ∧
+    (k % 4 = 2 → 2 ^ (k + 1) % 10 = 8) ∧
+    (k % 4 = 3 → 2 ^ (k + 1) % 10 = 6) := by
+  induction k with
+  | zero => omega
+  | succ k ih =>
+    rw [pow_succ, mul_mod, add_mod]
+    obtain hk|hk|hk|hk : k % 4 = 0 ∨ k % 4 = 1 ∨ k % 4 = 2 ∨ k % 4 = 3 := by omega
+    all_goals simp_all
+
 theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     (heven : Even n) (hperfect : n.Perfect) : n % 10 = 6 ∨ n % 10 = 8 := by
   obtain ⟨k, ⟨hk, hn⟩⟩ := even_en_perfect_desda.mp ⟨heven, hperfect⟩
@@ -239,10 +252,8 @@ theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     · left
       rw [mersenne]
       have : (2 ^ (k + 1) - 1) % 10 = 1 := by
-        
+
         sorry
       sorry
     · sorry
-
-
 end Nat
