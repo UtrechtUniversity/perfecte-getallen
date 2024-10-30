@@ -137,6 +137,8 @@ theorem perfect_getal_van_mersenne_priem_is_even (k : ℕ) (pr : (mersenne (k + 
 
 -- We kunnen elk getal schrijven als product van tweemacht en een oneven getal.
 -- Dit doen we door herhaaldelijk factoren twee eruit te delen tot het overgebleven getal oneven is.
+-- Opdracht: Beweeg met je cursor door dit bewijs en scrhijf comments (zoals deze) die uitleggen
+-- hoe het bewijs werkt.
 theorem ontbinding_met_tweemacht {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
   have h := Nat.multiplicity_finite_iff.2 ⟨Nat.prime_two.ne_one, hpos⟩
   obtain ⟨m, hm⟩ := pow_multiplicity_dvd 2 n
@@ -150,6 +152,8 @@ theorem ontbinding_met_tweemacht {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2
   rw [pow_succ, mul_assoc, ← hm]
 
 -- Euler had bewezen dat elk even perfect getal van de vorm van Euclides moet zijn
+-- Opdracht: Beweeg met je cursor door dit bewijs en scrhijf comments (zoals deze) die uitleggen
+-- hoe het bewijs werkt.
 theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (perf : Nat.Perfect n) :
     ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧ n = 2 ^ k * mersenne (k + 1) := by
   have hpos := perf.2
@@ -199,7 +203,7 @@ theorem even_en_perfect_desda {n : ℕ} :
   · rintro ⟨k, pr, rfl⟩
     exact ⟨perfect_getal_van_mersenne_priem_is_even k pr, perfect_twee_macht_prod_mersenne_van_priem k pr⟩
 
--- TODO: Clean up
+-- Als een mersenne getal priem is, dan moet de exponent ook priem zijn.
 theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Prime) : (k + 1).Prime := by
   by_contra! hc
   rw [@prime_def_lt] at hc
@@ -225,6 +229,7 @@ theorem mersenne_priem_heeft_priem_exponent {k : ℕ} (h : (mersenne (k + 1)).Pr
     have := Nat.pow_right_injective (by rfl) this
     omega
 
+-- Hulpstelling voor de volgende stelling
 theorem tweemacht_mod_10 (k : ℕ) :
     (k % 4 = 0 → 2 ^ (k + 1) % 10 = 2) ∧
     (k % 4 = 1 → 2 ^ (k + 1) % 10 = 4) ∧
@@ -237,9 +242,24 @@ theorem tweemacht_mod_10 (k : ℕ) :
     obtain hk|hk|hk|hk : k % 4 = 0 ∨ k % 4 = 1 ∨ k % 4 = 2 ∨ k % 4 = 3 := by omega
     all_goals simp_all
 
+-- Nu kunnen we bewijzen dat alle even perfecte getallen in zes of 8 eindigen.
+-- Opdracht: Beweeg met je cursor door dit bewijs en scrhijf comments (zoals deze) die uitleggen
+-- hoe het bewijs werkt.
 theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     (heven : Even n) (hperfect : n.Perfect) : n % 10 = 6 ∨ n % 10 = 8 := by
   obtain ⟨k, ⟨hk, hn⟩⟩ := even_en_perfect_desda.mp ⟨heven, hperfect⟩
+  have feitje : 2 ≤ 2 ^ (k + 1) := by
+      refine le_self_pow ?hn 2
+      exact Ne.symm (zero_ne_add_one k)
+
+  have feitje2 : k ≥ 1 := by
+    by_contra! hc
+    rw [@lt_one_iff] at hc
+    subst hc
+    rw [mersenne] at hn
+    norm_num at hn
+    contradiction
+
   rw [hn]
   have : (k + 1).Prime := mersenne_priem_heeft_priem_exponent hk
   cases' this.eq_two_or_odd with h2 hodd
@@ -251,9 +271,25 @@ theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     cases' hodd with h3 h4
     · left
       rw [mersenne]
+      have := (tweemacht_mod_10 k).1 (by omega)
       have : (2 ^ (k + 1) - 1) % 10 = 1 := by
+        omega
+      rw [mul_mod, this]
+      norm_num
+      rw [show k = k - 1 + 1 from by omega]
+      apply (tweemacht_mod_10 (k - 1)).2.2.2
+      omega
+    · right
+      rw [mersenne]
+      have := (tweemacht_mod_10 k).2.2.1 (by omega)
+      have : (2 ^ (k + 1) - 1) % 10 = 7 := by
+        omega
 
-        sorry
-      sorry
-    · sorry
+      rw [mul_mod, this]
+      rw [show k = k - 1 + 1 from by omega]
+      have := (tweemacht_mod_10 (k - 1)).2.1 (by omega)
+      omega
+
+-- Maar hoe zit het eigenlijk met de oneven perfecte getallen?
+
 end Nat
