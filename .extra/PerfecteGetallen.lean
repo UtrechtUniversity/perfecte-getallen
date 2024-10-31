@@ -30,6 +30,7 @@ open ArithmeticFunction Finset
 #eval 6 ∣ 31
 
 -- Opdracht: Bereken met `#eval` of `13` een deler is van `91`
+#eval 13 ∣ 91
 
 -- We kunnen bewijzen dat 5 een deler is van 10: Door het geven van het getal 2 met `use`, want `5*2=10`
 theorem vijf_deelt_tien : 5 ∣ 10 := by
@@ -37,15 +38,18 @@ theorem vijf_deelt_tien : 5 ∣ 10 := by
 
 -- Opdracht: Bewijs dat 7 een deler is van 56
 theorem zeven_deelt_zesenvijftig : 7 ∣ 56 := by
-  sorry
-  -- Oplossing : use 8
+  use 8
 
 -- De delers van een getal n kan je berekenen met `divisors`
 #eval (6 : Nat).divisors
 
 -- Opdracht: Bereken met `#eval` de delers van 28
 
+#eval (28 : Nat).divisors
+
 -- Opdracht: Bereken met `#eval` de delers van 2^8
+
+#eval (2^8).divisors
 
 def som_van_delers (n : ℕ) := ∑ d ∈ n.divisors, d
 
@@ -57,6 +61,13 @@ def som_van_delers (n : ℕ) := ∑ d ∈ n.divisors, d
 
 -- Bereken met `#eval` de som van de delers van `2^k` voor een paar verschillende getallen `k`
 
+#eval som_van_delers (2^1)
+#eval som_van_delers (2^2)
+#eval som_van_delers (2^3)
+#eval som_van_delers (2^4)
+#eval som_van_delers (2^5)
+
+
 -- Deze rekenregel stelt dat de som van de eerste `k` tweemachten gelijk is aan `2^k - 1`
 theorem som_van_tweemachten (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 := by
   rw [show 2 = 1 + 1 from rfl, ← geom_sum_mul_add 1 k]
@@ -67,10 +78,8 @@ theorem som_van_tweemachten (k : ℕ) : (∑ i ∈ range k, 2 ^ i)  = 2 ^ k - 1 
 theorem som_van_delers_tweemacht_gelijk_mersenne_opv (k : ℕ) : som_van_delers (2 ^ k) = mersenne (k + 1) := by
   -- Met simp only herschrijven we de definities naar wat er onder ligt
   simp only [som_van_delers, mersenne]
-  sorry
-  -- Oplossing:
-  -- norm_num
-  -- exact som_van_tweemachten (k + 1)
+  norm_num
+  exact som_van_tweemachten (k + 1)
 
 -- De definitie van een perfect getal is dat de som van alle delers, behalve het getal zelf, gelijk is aan het getal zelf.
 -- In de wiskunde bibliotheek van Lean (Mathlib), worden deze delers `properDivisors` genoemd.
@@ -94,9 +103,12 @@ theorem perfect_desda_som_van_delers_gelijk_twee_keer (h : 0 < n) :
 #eval Nat.Coprime 32 54
 
 -- Opdracht: Bereken met `#eval` of 4 en 7 copriem zijn.
+#eval Nat.Coprime 4 7
 
 -- Opdracht: Bereken de som van delers van 4, 7 en 28 met `#eval`
-
+#eval som_van_delers 4
+#eval som_van_delers 7
+#eval som_van_delers 28
 
 -- Als twee getallen copriem zijn, dan kunnen we de som van de delers van het product uitrekenen door de sommen van delers van p en q los te vermenigvuldigen
 theorem som_van_delers_multiplicatief {p q : ℕ} (h : Nat.Coprime p q): som_van_delers (p * q) = som_van_delers p * som_van_delers q := by
@@ -116,13 +128,11 @@ theorem som_van_delers_priem {p : ℕ} (h : p.Prime) : som_van_delers p = p + 1 
 #check mul_assoc
 theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
     Nat.Perfect (2 ^ k * mersenne (k + 1)) := by
-  sorry
-  -- Oplossing:
-  -- rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
-  --   mul_comm,
-  --   som_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
-  --   som_van_delers_tweemacht_gelijk_mersenne_opv]
-  -- simp [pr, som_van_delers_priem]
+  rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
+    mul_comm,
+    som_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
+    som_van_delers_tweemacht_gelijk_mersenne_opv]
+  simp [pr, som_van_delers_priem]
 
 
 -- Feitje: als we een mersenne priemgetal hebben met exponent `k + 1`, dan kan `k` niet gelijk zijn aan `0`.
@@ -140,15 +150,26 @@ theorem perfect_getal_van_mersenne_priem_is_even (k : ℕ) (pr : (mersenne (k + 
 -- Opdracht: Beweeg met je cursor door dit bewijs en scrhijf comments (zoals deze) die uitleggen
 -- hoe het bewijs werkt.
 theorem ontbinding_met_tweemacht {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2 ^ k * m ∧ ¬Even m := by
+  -- Het getal n heeft een eindig aantal factoren 2
   have h := Nat.multiplicity_finite_iff.2 ⟨Nat.prime_two.ne_one, hpos⟩
+  -- Dus we kunnen n als 2^(aantal factoren)*m schrijven, voor een zekere m
   obtain ⟨m, hm⟩ := pow_multiplicity_dvd 2 n
+  -- We claimen dat k = het aantal factoren en de zojuist gekozen m de stelling waar maken
   use multiplicity 2 n, m
+  -- In ieder geval is n van de juiste vorm
   refine ⟨hm, ?_⟩
+  -- Nu bewijzen we dat m oneven is
+  -- n is oneven is equivalent met n is niet deelbaar door 2
   rw [even_iff_two_dvd]
+  -- We weten dat n niet deelbaar is door een extra factor 2
   have hg := h.not_pow_dvd_of_multiplicity_lt (Nat.lt_succ_self _)
+  -- We bewijzen door contrapositie
   contrapose! hg
+  -- Kies k zo dat 2*k = m
   obtain ⟨k, rfl⟩ := hg
+  -- We claimen dat k dan ook bewijst dat n deelbaar is door een extra factor 2
   apply Dvd.intro k
+  -- Herschrijven bewijst de stelling
   rw [pow_succ, mul_assoc, ← hm]
 
 -- Euler had bewezen dat elk even perfect getal van de vorm van Euclides moet zijn
@@ -156,15 +177,23 @@ theorem ontbinding_met_tweemacht {n : ℕ} (hpos : 0 < n) : ∃ k m : ℕ, n = 2
 -- hoe het bewijs werkt.
 theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (perf : Nat.Perfect n) :
     ∃ k : ℕ, Nat.Prime (mersenne (k + 1)) ∧ n = 2 ^ k * mersenne (k + 1) := by
+  -- Merk op dat n > 0
   have hpos := perf.2
+  -- We trekken een tweemacht uit n
   rcases ontbinding_met_tweemacht hpos with ⟨k, m, rfl, hm⟩
+  -- We claimen dat die macht de gevraagde vorm geeft
   use k
+  -- Als m niet even is, is m niet deelbaar door 2
   rw [even_iff_two_dvd] at hm
+  -- We redeneren door gebruik van de karakterisering van perfecte getallen
+  -- en eigenschappen van de som van delers
   rw [perfect_desda_som_van_delers_gelijk_twee_keer hpos,
     som_van_delers_multiplicatief (Nat.prime_two.coprime_pow_of_not_dvd hm).symm,
     som_van_delers_tweemacht_gelijk_mersenne_opv, ← mul_assoc, ← pow_succ'] at perf
+  -- We herschrijven de vergelijking naar een uitdrukking voor m, en substitueren die overal
   obtain ⟨j, rfl⟩ := ((Odd.coprime_two_right (by simp)).pow_right _).dvd_of_dvd_mul_left
     (Dvd.intro _ perf)
+  -- We herschrijven met de rekenregels voor vermenigvuldiging
   rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
   have h := mul_left_cancel₀ (by positivity) perf
   rw [som_van_delers, Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
