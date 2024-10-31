@@ -38,7 +38,6 @@ theorem vijf_deelt_tien : 5 ∣ 10 := by
 -- Opdracht: Bewijs dat 7 een deler is van 56
 theorem zeven_deelt_zesenvijftig : 7 ∣ 56 := by
   sorry
-  -- Oplossing : use 8
 
 -- De delers van een getal n kan je berekenen met `divisors`
 #eval (6 : Nat).divisors
@@ -68,10 +67,7 @@ theorem som_van_delers_tweemacht_gelijk_mersenne_opv (k : ℕ) : som_van_delers 
   -- Met simp only herschrijven we de definities naar wat er onder ligt
   simp only [som_van_delers, mersenne]
   sorry
-  -- Oplossing:
-  -- norm_num
-  -- exact som_van_tweemachten (k + 1)
-
+  
 -- De definitie van een perfect getal is dat de som van alle delers, behalve het getal zelf, gelijk is aan het getal zelf.
 -- In de wiskunde bibliotheek van Lean (Mathlib), worden deze delers `properDivisors` genoemd.
 #reduce Perfect
@@ -117,13 +113,6 @@ theorem som_van_delers_priem {p : ℕ} (h : p.Prime) : som_van_delers p = p + 1 
 theorem perfect_twee_macht_prod_mersenne_van_priem (k : ℕ) (pr : (mersenne (k + 1)).Prime) :
     Nat.Perfect (2 ^ k * mersenne (k + 1)) := by
   sorry
-  -- Oplossing:
-  -- rw [perfect_desda_som_van_delers_gelijk_twee_keer (by positivity), ← mul_assoc, ← pow_succ',
-  --   mul_comm,
-  --   som_van_delers_multiplicatief ((Odd.coprime_two_right (by simp)).pow_right _),
-  --   som_van_delers_tweemacht_gelijk_mersenne_opv]
-  -- simp [pr, som_van_delers_priem]
-
 
 -- Feitje: als we een mersenne priemgetal hebben met exponent `k + 1`, dan kan `k` niet gelijk zijn aan `0`.
 theorem mersenne_priem_exponent_niet_nul (k : ℕ) (pr : (mersenne (k + 1)).Prime) : k ≠ 0 := by

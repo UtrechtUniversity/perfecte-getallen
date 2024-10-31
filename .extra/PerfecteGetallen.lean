@@ -196,29 +196,40 @@ theorem eq_two_pow_mul_prime_mersenne_of_even_perfect {n : ℕ} (ev : Even n) (p
   -- We herschrijven met de rekenregels voor vermenigvuldiging
   rw [← mul_assoc, mul_comm _ (mersenne _), mul_assoc] at perf
   have h := mul_left_cancel₀ (by positivity) perf
+  -- We herschrijven met regels over sommen van delers
   rw [som_van_delers, Nat.sum_divisors_eq_sum_properDivisors_add_self, ← succ_mersenne, add_mul,
     one_mul, add_comm] at h
   have hj := add_left_cancel h
+  -- Als de som van strikte delers het getal zelf deelt moet het gelijk zijn aan 1 of het getal zelf
   cases Nat.sum_properDivisors_dvd (by rw [hj]; apply Dvd.intro_left (mersenne (k + 1)) rfl) with
   | inl h_1 =>
+    -- In het geval dat het 1 is, moet j gelijk zijn aan 1
     have j1 : j = 1 := Eq.trans hj.symm h_1
+    -- En is mersenne (k + 1) inderdaad priem
     rw [j1, mul_one, Nat.sum_properDivisors_eq_one_iff_prime] at h_1
+    -- Vereenvoudigen voltooit het bewijs in dit geval
     simp [h_1, j1]
   | inr h_1 =>
+    -- Anders moet mersenne (k + 1) gelijk zijn aan 1
     have jcon := Eq.trans hj.symm h_1
     rw [← one_mul j, ← mul_assoc, mul_one] at jcon
     have jcon2 := mul_right_cancel₀ ?_ jcon
-    · exfalso
+    · -- Dit geval is niet mogelijk
+      exfalso
+      -- We scheiden in gevallen
       match k with
       | 0 =>
+        -- Geval: k = 0
         apply hm
         rw [← jcon2, pow_zero, one_mul, one_mul] at ev
         rw [← jcon2, one_mul]
         exact even_iff_two_dvd.mp ev
       | .succ k =>
+        -- Geval : k > 0
         apply ne_of_lt _ jcon2
         rw [mersenne, ← Nat.pred_eq_sub_one, Nat.lt_pred_iff, ← pow_one (Nat.succ 1)]
         apply pow_lt_pow_right (Nat.lt_succ_self 1) (Nat.succ_lt_succ (Nat.succ_pos k))
+    -- Hier laten we zien dat j ≠ 0
     contrapose! hm
     simp [hm]
 
@@ -276,11 +287,14 @@ theorem tweemacht_mod_10 (k : ℕ) :
 -- hoe het bewijs werkt.
 theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     (heven : Even n) (hperfect : n.Perfect) : n % 10 = 6 ∨ n % 10 = 8 := by
+  -- We gebruiken de karakterisering van een perfect getal
   obtain ⟨k, ⟨hk, hn⟩⟩ := even_en_perfect_desda.mp ⟨heven, hperfect⟩
+  -- Handige ongelijkheid
   have feitje : 2 ≤ 2 ^ (k + 1) := by
       refine le_self_pow ?hn 2
       exact Ne.symm (zero_ne_add_one k)
 
+  -- Omdat we weten dat 2^(k+1) priem is, moet k ≥ 1 gelden
   have feitje2 : k ≥ 1 := by
     by_contra! hc
     rw [@lt_one_iff] at hc
@@ -288,17 +302,21 @@ theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
     rw [mersenne] at hn
     norm_num at hn
     contradiction
-
+  -- Herschrijf met de karakterisering van een perfect getal.
   rw [hn]
   have : (k + 1).Prime := mersenne_priem_heeft_priem_exponent hk
+  -- Een priemgetal is 2 of oneven
   cases' this.eq_two_or_odd with h2 hodd
-  · left
+  · -- Als k + 1 = 2, dan is het perfecte getal 6. Dat rekenenen we uit.
+    left
     have : k = 1 := by omega
     rw [h2, mersenne, this]
     norm_num
-  · rw [Nat.odd_mod_four_iff] at hodd
+  · -- Als k + 1 oneven is, dan heeft het rest 1 of 3 na deling door 4.
+    rw [Nat.odd_mod_four_iff] at hodd
     cases' hodd with h3 h4
-    · left
+    · -- Als de rest 1 is, eindigt het perfecte getal op 6
+      left
       rw [mersenne]
       have := (tweemacht_mod_10 k).1 (by omega)
       have : (2 ^ (k + 1) - 1) % 10 = 1 := by
@@ -308,7 +326,8 @@ theorem even_en_perfect_eindigt_in_zes_of_acht {n : ℕ}
       rw [show k = k - 1 + 1 from by omega]
       apply (tweemacht_mod_10 (k - 1)).2.2.2
       omega
-    · right
+    · -- Als de rest 3 is, eindigt het perfecte getal op 8
+      right
       rw [mersenne]
       have := (tweemacht_mod_10 k).2.2.1 (by omega)
       have : (2 ^ (k + 1) - 1) % 10 = 7 := by
